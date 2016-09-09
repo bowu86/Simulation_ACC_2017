@@ -1,0 +1,119 @@
+mdp //indicating the models are Markov Decision Processes
+
+module assemble //module for assmebly
+	T:[0..5] init 0;//initial state is zero
+	[a0r]T=0->(T'=1);//a*r where *=0,1,2,3 denote the robot action, 
+	[a0h]T=0->(T'=1);//a*h where *=0,1,2,3 denote the human action
+	[a1r]T=0->(T'=2);
+	[a1h]T=0->(T'=2);
+	[a1r]T=1->(T'=3);
+	[a1h]T=1->(T'=3);
+	[a0r]T=2->(T'=3);
+	[a0h]T=2->(T'=3);
+	[a2h]T=3->(T'=4);
+	[a2r]T=3->(T'=4);
+	[a3r]T=4->(T'=5);
+	[a3h]T=4->(T'=5);
+	[reset]T=5->(T'=0);//reset action move the state back to the initial
+endmodule
+
+
+//p*r where *=0,1,2,3 denote the probability of normal operations
+const double p0r=0.8;
+const double p1r=0.9;
+const double p2r=0.7;
+const double p3r=0.9;
+
+module robot //module for robot
+	M:[0..1] init 0;// 0 denotes the normal state and 1 denote the faulty state, initial state is 0
+	[a0r]M=0->p0r:(M'=0)+(1-p0r):(M'=1);
+	[a1r]M=0->p1r:(M'=0)+(1-p1r):(M'=1);
+	[a2r]M=0->p2r:(M'=0)+(1-p2r):(M'=1);
+	[a3r]M=0->p3r:(M'=0)+(1-p3r):(M'=1);
+	[repair]M=1->(M'=0);
+endmodule
+
+//f*r or f*h where *=0,1,2,3 denote the probability of stay at the same fatigue level, 
+const double f0r=0.5;
+const double f1r=0.4;
+const double f2r=0.3;
+const double f3r=0.2;
+const double f0h=0.5;
+const double f1h=0.4;
+const double f2h=0.3;
+const double f3h=0.4;
+const double frepair=0.4;
+
+module fatigue //module for human fatigue levels
+	HF:[0..2] init 0;
+// if fatigue level is 0, any robot action will not decrease it
+
+	[a0r]HF=0->(HF'=0);
+	[a1r]HF=0->(HF'=0);
+	[a2r]HF=0->(HF'=0);
+	[a3r]HF=0->(HF'=0);
+// human action at fatigue level 0 
+	[repair]HF=0->frepair:(HF'=0)+(1-frepair):(HF'=1);
+	[a0h]HF=0->f0h:(HF'=0)+(1-f0h):(HF'=1);
+	[a1h]HF=0->f1h:(HF'=0)+(1-f1h):(HF'=1);
+	[a2h]HF=0->f2h:(HF'=0)+(1-f2h):(HF'=1);
+	[a3h]HF=0->f3h:(HF'=0)+(1-f3h):(HF'=1);
+// robot action at fatigue level 1
+
+	[a0r]HF=1->f0r:(HF'=1)+(1-f0r):(HF'=0);
+	[a1r]HF=1->f1r:(HF'=1)+(1-f1r):(HF'=0);
+	[a2r]HF=1->f2r:(HF'=1)+(1-f2r):(HF'=0);
+	[a3r]HF=1->f3r:(HF'=1)+(1-f3r):(HF'=0);
+// human action at fatigue level 1
+	[repair]HF=1->frepair:(HF'=1)+(1-frepair):(HF'=2);
+	[a0h]HF=1->f0h:(HF'=1)+(1-f0h):(HF'=2);
+	[a1h]HF=1->f1h:(HF'=1)+(1-f1h):(HF'=2);
+	[a2h]HF=1->f2h:(HF'=1)+(1-f2h):(HF'=2);
+	[a3h]HF=1->f3h:(HF'=1)+(1-f3h):(HF'=2);
+// robot action at fatigue level 2
+	[a0r]HF=2->f0r:(HF'=2)+(1-f0r):(HF'=1);
+	[a1r]HF=2->f1r:(HF'=2)+(1-f1r):(HF'=1);
+	[a2r]HF=2->f2r:(HF'=2)+(1-f2r):(HF'=1);
+	[a3r]HF=2->f3r:(HF'=2)+(1-f3r):(HF'=1);
+// if fatigue level is 2, any human action will not increase it
+	[repair]HF=2->(HF'=2);
+	[a0h]HF=2->(HF'=2);
+	[a1h]HF=2->(HF'=2);
+	[a2h]HF=2->(HF'=2);
+	[a3h]HF=2->(HF'=2);
+endmodule
+
+//f*r where *=0,1,2,3 denote the probability of stay at the same trust level, 
+const double t0r=0.5;
+const double t1r=0.4;
+const double t2r=0.3;
+const double t3r=0.2;
+
+
+module trust //module for human trust levels
+	TR:[0..2] init 0;
+// any human action will not change trust level, so only consider robot actions
+// we assume that once the machine makes a mistake, the trust level decrease by 1
+	[repair]TR=0->(TR'=0);
+	[repair]TR=1->(TR'=0);
+	[repair]TR=2->(TR'=1);
+// robot action at trust level 0
+	[a0r]TR=0->t0r:(TR'=0)+(1-t0r):(TR'=1);
+	[a1r]TR=0->t1r:(TR'=0)+(1-t1r):(TR'=1);
+	[a2r]TR=0->t2r:(TR'=0)+(1-t2r):(TR'=1);
+	[a3r]TR=0->t3r:(TR'=0)+(1-t3r):(TR'=1);
+// robot action at trust level 1
+
+	[a0r]TR=1->t0r:(TR'=1)+((1-t0r)/2):(TR'=0)+((1-t0r)/2):(TR'=2);
+	[a1r]TR=1->t1r:(TR'=1)+((1-t1r)/2):(TR'=0)+((1-t1r)/2):(TR'=2);
+	[a2r]TR=1->t2r:(TR'=1)+((1-t2r)/2):(TR'=0)+((1-t2r)/2):(TR'=2);
+	[a3r]TR=1->t3r:(TR'=1)+((1-t3r)/2):(TR'=0)+((1-t3r)/2):(TR'=2);
+
+// robot action at trust level 2
+	[a0r]TR=2->t0r:(TR'=2)+(1-t0r):(TR'=1);
+	[a1r]TR=2->t1r:(TR'=2)+(1-t1r):(TR'=1);
+	[a2r]TR=2->t2r:(TR'=2)+(1-t2r):(TR'=1);
+	[a3r]TR=2->t3r:(TR'=2)+(1-t3r):(TR'=1);
+endmodule
+
+label "finish" = (T=5);//The labelling for finishing one round of assembling

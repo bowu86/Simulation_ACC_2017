@@ -1,0 +1,44 @@
+mdp //indicating the models are Markov Decision Processes
+
+module assemble //module for assmebly
+	T:[0..5] init 0;//initial state is zero
+	[a0h]T=0->(T'=1);//a*h where *=0,1,2,3 denote the human action
+	[a1h]T=0->(T'=2);
+	[a1h]T=1->(T'=3);
+	[a0h]T=2->(T'=3);
+	[a2h]T=3->(T'=4);
+	[a3h]T=4->(T'=5);
+	[reset]T=5->(T'=0);//reset action move the state back to the initial
+endmodule
+
+//f*r or f*h where *=0,1,2,3 denote the probability of stay at the same fatigue level, 
+const double f0h=0.5;
+const double f1h=0.4;
+const double f2h=0.3;
+const double f3h=0.4;
+
+
+module fatigue //module for human fatigue levels
+	HF:[0..2] init 0;
+
+// human action at fatigue level 0 
+	[a0h]HF=0->f0h:(HF'=0)+(1-f0h):(HF'=1);
+	[a1h]HF=0->f1h:(HF'=0)+(1-f1h):(HF'=1);
+	[a2h]HF=0->f2h:(HF'=0)+(1-f2h):(HF'=1);
+	[a3h]HF=0->f3h:(HF'=0)+(1-f3h):(HF'=1);
+// human action at fatigue level 1
+	[a0h]HF=1->f0h:(HF'=1)+(1-f0h):(HF'=2);
+	[a1h]HF=1->f1h:(HF'=1)+(1-f1h):(HF'=2);
+	[a2h]HF=1->f2h:(HF'=1)+(1-f2h):(HF'=2);
+	[a3h]HF=1->f3h:(HF'=1)+(1-f3h):(HF'=2);
+
+// if fatigue level is 2, any human action will not increase it
+	[a0h]HF=2->(HF'=2);
+	[a1h]HF=2->(HF'=2);
+	[a2h]HF=2->(HF'=2);
+	[a3h]HF=2->(HF'=2);
+endmodule
+
+
+
+label "finish" = (T=5);//The labelling for finishing one round of assembling
