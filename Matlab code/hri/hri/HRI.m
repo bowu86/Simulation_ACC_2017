@@ -3,6 +3,7 @@ close all
 clc
 clear variables
 tic
+addpath(genpath('../../optimal mdp ltl'))
 Task.state_no=6;% number of states in task
 Fatigue.state_no=3;% number of states in fatigue model
 Robot.state_no=2; % number of states in robot model
@@ -69,7 +70,7 @@ else
 end
 
 %% Generate DRA and assign M.obs
-casestudy = 'ACC1'; % Change this to your formula of choice
+casestudy = 'ACC1'; % Change this to your formula of choice, ACC is for ordered LTL specificaiton
 N_p = 3;
 % Assume that either formula in text form (.ltl file) or in DRA form (.out file created by ltl2dstar)
 % is available for the LTL input
@@ -218,19 +219,20 @@ end
 fsize=30;
 figure
 plot(JJ(1,:),'LineWidth',4)
-title('Cost from the initial state vs. Iteration', 'FontSize', fsize)
 xlabel('Iteration #', 'FontSize', fsize)
-ylabel('$J^\star(s_{\mathcal P0})$', 'Interpreter', 'latex','FontSize',fsize)
+ylabel('Cost from the initial state','FontSize',fsize)
 set(gca,'fontsize',fsize)
+set(gca,'xtick',1:length(JJ(1,:)))
 axis tight
-policy=cell(M.state_no,1);
+policy=cell(M.state_no,1); %map the policy back to original MDP
 for i=1:Pstate
     idx=round((mod(i,M.state_no)));
+    idx_DRA=floor((i-1)/M.state_no);
     if idx==0
         idx=M.state_no;
     end
     if A_opt(i)~=0
-        policy{idx}=[policy{idx},' ',M.CONTROLSTRING{A_opt(i)}];
+        policy{idx}=[policy{idx},' ',M.CONTROLSTRING{A_opt(i)},' ',int2str(idx_DRA)];
     end
 end
 toc

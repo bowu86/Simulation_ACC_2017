@@ -5,14 +5,25 @@ N_fatigue=3;
 N=N_assemble*N_fatigue;
 keySet={'a0h','a1h','a2h','a3h','reset'};
 valueSet={1,2,3,4,5};
-%Action=containers.Map(keySet,valueSet);
+Action=containers.Map(keySet,valueSet);
 state=states_human();
 Na=length(valueSet);
 r=zeros(N,Na);
 r_assemble=zeros(N_assemble,Na);
 r_fatigue=zeros(N_fatigue,Na);
 %% assign assemble cost
-r_assemble(6,5)=0.1;%reward finishing one assembly
+r_assemble(1,Action('a0h'))=1;
+r_assemble(1,Action('a1h'))=1;
+
+r_assemble(2,Action('a1h'))=1;
+
+r_assemble(3,Action('a0h'))=1;
+
+r_assemble(4,Action('a2h'))=1;
+
+r_assemble(5,Action('a3h'))=1;
+
+r_assemble(6,Action('reset'))=0.1;%reward finishing one assembly
 %% assign fatigue cost
 
 for i=1:4
